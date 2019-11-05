@@ -1,3 +1,5 @@
+#include <math.h>
+
 #include "midi.h"
 using namespace midi;
 
