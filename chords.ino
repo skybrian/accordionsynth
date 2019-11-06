@@ -12,11 +12,15 @@ using namespace sound;
 const Chord song[] = {
   Chord(B2-1),
   Chord::major(B2-1),
+  Chord::major(B2-1),
   Chord(F3),
+  Chord::major(F3),
   Chord::major(F3),
   Chord(C3),
   Chord::major(C3),
+  Chord::major(C3),
   Chord(G3),
+  Chord(D3, G3, B3),
   Chord(D3, G3, B3),
 };
 
@@ -26,7 +30,7 @@ AudioOutputI2S out;
 
 AudioConnection patches[] = {
   AudioConnection(bank.mixer, 0, out, 0),
-  AudioConnection(bank.mixer, 0, out, 1),  
+  AudioConnection(bank.mixer, 0, out, 1),
 };
 
 #define LENGTH(x) (sizeof(x)/sizeof(x[0]))
@@ -42,8 +46,8 @@ void setup() {
 void loop() {
   for (unsigned i = 0; i < LENGTH(song); i++) {
     bank.notesOn(song[i]);
-    delay(200);
+    delay(100);
     bank.notesOff();
-    delay(200);    
+    delay(300);
   }
 }

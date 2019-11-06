@@ -4,17 +4,29 @@
 
 namespace sound {
 
+#define WAVE_COUNT 4
+const float harmonics[WAVE_COUNT] = {0.5, 1.0, 1.0, 0.05};
+
 class Reed {
 public:
   Reed(midi::Note n) : note(n) {
-    wave.amplitude(1.0);
-    wave.frequency(n.frequency());
+    float mixedAmp = 0;
+    for (int i = 0; i < WAVE_COUNT; i++) {
+      waves[i].amplitude(harmonics[i]);
+      waves[i].frequency(n.frequency() * (i + 1));
+      mixedAmp += harmonics[i];
+    }
+    for (int i = 0; i < WAVE_COUNT; i++) {
+      mixer.gain(i, harmonics[i]/mixedAmp);
+    }
     env.sustain(1.0);
     env.release(10);
   }
 
   void begin() {
-    wave.begin(WAVEFORM_SAWTOOTH);    
+    for (int i = 0; i < WAVE_COUNT; i++) {
+      waves[i].begin(WAVEFORM_SINE);
+    }
   }
 
   void noteOn() {
@@ -28,8 +40,15 @@ public:
   AudioEffectEnvelope env;
   midi::Note note;
 private:
-  AudioSynthWaveform wave;
-  AudioConnection patch = AudioConnection(wave, 0, env, 0);
+  AudioSynthWaveform waves[WAVE_COUNT];
+  AudioMixer4 mixer;
+  AudioConnection patches[5] = {
+    AudioConnection(waves[0], 0, mixer, 0),
+    AudioConnection(waves[1], 0, mixer, 1),
+    AudioConnection(waves[2], 0, mixer, 2),
+    AudioConnection(waves[3], 0, mixer, 3),
+    AudioConnection(mixer, 0, env, 0),
+  };
 };
 
 #if !defined(__ARM_ARCH_7EM__)
@@ -109,18 +128,20 @@ public:
   BigMixer mixer;
 private:
   ReedBank reeds;
-  AudioConnection patch1 = AudioConnection(reeds.at[0].env, 0, mixer, 0);
-  AudioConnection patch2 = AudioConnection(reeds.at[1].env, 0, mixer, 1);
-  AudioConnection patch3 = AudioConnection(reeds.at[2].env, 0, mixer, 2);
-  AudioConnection patch4 = AudioConnection(reeds.at[3].env, 0, mixer, 3);
-  AudioConnection patch5 = AudioConnection(reeds.at[4].env, 0, mixer, 4);
-  AudioConnection patch6 = AudioConnection(reeds.at[5].env, 0, mixer, 5);
-  AudioConnection patch7 = AudioConnection(reeds.at[6].env, 0, mixer, 6);
-  AudioConnection patch8 = AudioConnection(reeds.at[7].env, 0, mixer, 7);
-  AudioConnection patch9 = AudioConnection(reeds.at[8].env, 0, mixer, 8);
-  AudioConnection patch10 = AudioConnection(reeds.at[9].env, 0, mixer, 9);
-  AudioConnection patch11 = AudioConnection(reeds.at[10].env, 0, mixer, 10);
-  AudioConnection patch12 = AudioConnection(reeds.at[11].env, 0, mixer, 11);
+  AudioConnection patches[BANK_SIZE] = {
+    AudioConnection(reeds.at[0].env, 0, mixer, 0),
+    AudioConnection(reeds.at[1].env, 0, mixer, 1),
+    AudioConnection(reeds.at[2].env, 0, mixer, 2),
+    AudioConnection(reeds.at[3].env, 0, mixer, 3),
+    AudioConnection(reeds.at[4].env, 0, mixer, 4),
+    AudioConnection(reeds.at[5].env, 0, mixer, 5),
+    AudioConnection(reeds.at[6].env, 0, mixer, 6),
+    AudioConnection(reeds.at[7].env, 0, mixer, 7),
+    AudioConnection(reeds.at[8].env, 0, mixer, 8),
+    AudioConnection(reeds.at[9].env, 0, mixer, 9),
+    AudioConnection(reeds.at[10].env, 0, mixer, 10),
+    AudioConnection(reeds.at[11].env, 0, mixer, 11),
+  };
 };
 
 } // namespace
