@@ -10,44 +10,55 @@ using namespace midi;
 using namespace sound;
 
 const Chord song[] = {
-  Chord(B2-1),
+  Chord::octave(B2-1),
   Chord::major(B2-1),
   Chord::major(B2-1),
-  Chord(F3),
-  Chord::major(F3),
-  Chord::major(F3),
-  Chord(C3),
-  Chord::major(C3),
-  Chord::major(C3),
-  Chord(G3),
-  Chord(D3, G3, B3),
-  Chord(D3, G3, B3),
+  Chord::octave(F2),
+  Chord::major(F2),
+  Chord::major(F2),
+  Chord::octave(C2),
+  Chord::major(C2),
+  Chord::major(C2),
+  Chord::octave(G2),
+  Chord::major(G2),
+  Chord::major(G2),
 };
 
 AudioControlSGTL5000 shield;
-Bank bank(B2-1);
+Bank lowBank(G2);
+Bank highBank(E3);
+AudioMixer4 mixer;
 AudioOutputI2S out;
 
 AudioConnection patches[] = {
-  AudioConnection(bank.mixer, 0, out, 0),
-  AudioConnection(bank.mixer, 0, out, 1),
+  AudioConnection(lowBank.mixer, 0, mixer, 0),
+  AudioConnection(highBank.mixer, 0, mixer, 1),
+  AudioConnection(mixer, 0, out, 0),
+  AudioConnection(mixer, 0, out, 1),
 };
 
 #define LENGTH(x) (sizeof(x)/sizeof(x[0]))
 
+void playSong(Bank& bank) {
+  for (unsigned i = 0; i < LENGTH(song); i++) {
+    auto ch = song[i];
+//    ch.printTo(Serial);
+//    Serial.println();
+    bank.notesOn(ch);
+    delay(100);
+    bank.notesOff();
+    delay(300);
+  }  
+}
+
 void setup() {
   Serial.begin(9600);
-  AudioMemory(20);
+  AudioMemory(40);
   shield.enable();
   shield.volume(0.25);
 }
 
-
 void loop() {
-  for (unsigned i = 0; i < LENGTH(song); i++) {
-    bank.notesOn(song[i]);
-    delay(100);
-    bank.notesOff();
-    delay(300);
-  }
+  playSong(lowBank);
+  playSong(highBank);
 }
