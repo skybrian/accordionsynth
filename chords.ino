@@ -45,9 +45,9 @@ void playSong(Bank& bank) {
 //    ch.printTo(Serial);
 //    Serial.println();
     bank.notesOn(ch);
-    delay(100);
+    delay(150);
     bank.notesOff();
-    delay(300);
+    delay(250);
   }  
 }
 
@@ -59,6 +59,6 @@ void setup() {
 }
 
 void loop() {
-  playSong(lowBank);
+  //playSong(lowBank);
   playSong(highBank);
 }

@@ -15,12 +15,14 @@ public:
       waves[i].amplitude(harmonics[i]);
       waves[i].frequency(n.frequency() * (i + 1));
       mixedAmp += harmonics[i];
+      env[i].attack(20+i*40);
+      env[i].decay(0);
+      env[i].sustain(1.0);
+      env[i].release(20);
     }
     for (int i = 0; i < WAVE_COUNT; i++) {
       mixer.gain(i, harmonics[i]/mixedAmp);
     }
-    env.sustain(1.0);
-    env.release(10);
   }
 
   void begin() {
@@ -30,24 +32,35 @@ public:
   }
 
   void noteOn() {
-    env.noteOn();
+    for (int i = 0; i < WAVE_COUNT; i++) {
+      env[i].noteOn();
+    }
   }
 
   void noteOff() {
-    env.noteOff();
+    for (int i = 0; i < WAVE_COUNT; i++) {
+      env[i].noteOff();
+    }
   }
 
-  AudioEffectEnvelope env;
+  AudioStream& out() {
+    return mixer; 
+  }
+
   midi::Note note;
 private:
   AudioSynthWaveform waves[WAVE_COUNT];
+  AudioEffectEnvelope env[WAVE_COUNT];
   AudioMixer4 mixer;
-  AudioConnection patches[5] = {
-    AudioConnection(waves[0], 0, mixer, 0),
-    AudioConnection(waves[1], 0, mixer, 1),
-    AudioConnection(waves[2], 0, mixer, 2),
-    AudioConnection(waves[3], 0, mixer, 3),
-    AudioConnection(mixer, 0, env, 0),
+  AudioConnection patches[8] = {
+    AudioConnection(waves[0], 0, env[0], 0),
+    AudioConnection(waves[1], 0, env[1], 0),
+    AudioConnection(waves[2], 0, env[2], 0),
+    AudioConnection(waves[3], 0, env[3], 0),
+    AudioConnection(env[0], 0, mixer, 0),
+    AudioConnection(env[1], 0, mixer, 1),
+    AudioConnection(env[2], 0, mixer, 2),
+    AudioConnection(env[3], 0, mixer, 3),
   };
 };
 
@@ -129,18 +142,18 @@ public:
 private:
   ReedBank reeds;
   AudioConnection patches[BANK_SIZE] = {
-    AudioConnection(reeds.at[0].env, 0, mixer, 0),
-    AudioConnection(reeds.at[1].env, 0, mixer, 1),
-    AudioConnection(reeds.at[2].env, 0, mixer, 2),
-    AudioConnection(reeds.at[3].env, 0, mixer, 3),
-    AudioConnection(reeds.at[4].env, 0, mixer, 4),
-    AudioConnection(reeds.at[5].env, 0, mixer, 5),
-    AudioConnection(reeds.at[6].env, 0, mixer, 6),
-    AudioConnection(reeds.at[7].env, 0, mixer, 7),
-    AudioConnection(reeds.at[8].env, 0, mixer, 8),
-    AudioConnection(reeds.at[9].env, 0, mixer, 9),
-    AudioConnection(reeds.at[10].env, 0, mixer, 10),
-    AudioConnection(reeds.at[11].env, 0, mixer, 11),
+    AudioConnection(reeds.at[0].out(), 0, mixer, 0),
+    AudioConnection(reeds.at[1].out(), 0, mixer, 1),
+    AudioConnection(reeds.at[2].out(), 0, mixer, 2),
+    AudioConnection(reeds.at[3].out(), 0, mixer, 3),
+    AudioConnection(reeds.at[4].out(), 0, mixer, 4),
+    AudioConnection(reeds.at[5].out(), 0, mixer, 5),
+    AudioConnection(reeds.at[6].out(), 0, mixer, 6),
+    AudioConnection(reeds.at[7].out(), 0, mixer, 7),
+    AudioConnection(reeds.at[8].out(), 0, mixer, 8),
+    AudioConnection(reeds.at[9].out(), 0, mixer, 9),
+    AudioConnection(reeds.at[10].out(), 0, mixer, 10),
+    AudioConnection(reeds.at[11].out(), 0, mixer, 11),
   };
 };
 
