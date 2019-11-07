@@ -9,6 +9,8 @@ using namespace midi;
 #include "sound.h"
 using namespace sound;
 
+#include "button.h"
+
 const Chord song[] = {
   Chord::octave(B2-1),
   Chord::major(B2-1),
@@ -31,8 +33,8 @@ AudioMixer4 mixer;
 AudioOutputI2S out;
 
 AudioConnection patches[] = {
-  AudioConnection(lowBank.mixer, 0, mixer, 0),
-  AudioConnection(highBank.mixer, 0, mixer, 1),
+  AudioConnection(lowBank.out(), 0, mixer, 0),
+  AudioConnection(highBank.out(), 0, mixer, 1),
   AudioConnection(mixer, 0, out, 0),
   AudioConnection(mixer, 0, out, 1),
 };
@@ -51,14 +53,30 @@ void playSong(Bank& bank) {
   }  
 }
 
+Button buttons[] = {
+  Button(14, Chord::octave(C2)),
+  Button(16, Chord::octave(G2)),
+  Button(12, Chord::major(C2)),
+  Button(15, Chord::major(G2)),
+};
+
 void setup() {
   Serial.begin(9600);
+  for (unsigned i = 0; i < LENGTH(buttons); i++) {
+    buttons[i].setup();
+  }
   AudioMemory(40);
   shield.enable();
   shield.volume(0.25);
 }
 
 void loop() {
+  Chord ch = Chord();
+  for (unsigned i = 0; i < LENGTH(buttons); i++) {
+    ch = ch + buttons[i].poll();    
+  }
+  highBank.notesOn(ch);
+  
   //playSong(lowBank);
-  playSong(highBank);
+  //playSong(highBank);
 }

@@ -117,6 +117,11 @@ public:
     return Chord(octaveBits(n) | octaveBits(n + 4) | octaveBits(n + 7));
   }
 
+  // Returns the union of the notes in both chords.
+  constexpr Chord operator +(const Chord other) const {
+    return Chord(bits | other.bits);
+  }
+
   constexpr bool has(Note n) {
     return (Chord(n).bits & bits) != 0;
   }

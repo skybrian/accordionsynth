@@ -32,9 +32,14 @@ public:
   }
 
   void noteOn() {
+    if (env[0].isActive()) {
+      return;
+    }
+    AudioNoInterrupts();
     for (int i = 0; i < WAVE_COUNT; i++) {
       env[i].noteOn();
     }
+    AudioInterrupts();
   }
 
   void noteOff() {
@@ -76,6 +81,7 @@ public:
   BigMixer() : AudioStream(MIXER_SIZE, inputQueueArray) {
     for (int i=0; i<MIXER_SIZE; i++) {
       multiplier[i] = 65536;
+      wanted_multiplier[i] = 65536;
     }
   }
 
@@ -85,11 +91,12 @@ public:
     if (channel >= MIXER_SIZE) return;
     if (gain > 32767.0f) gain = 32767.0f;
     else if (gain < -32767.0f) gain = -32767.0f;
-    multiplier[channel] = gain * 65536.0f; // TODO: proper roundoff?
+    wanted_multiplier[channel] = gain * 65536.0f; // TODO: proper roundoff?
   }
   
 private:
   int32_t multiplier[MIXER_SIZE];
+  int32_t wanted_multiplier[MIXER_SIZE];
   audio_block_t *inputQueueArray[MIXER_SIZE];
 };
 
@@ -137,10 +144,14 @@ public:
   void notesOff() {
     notesOn(midi::Chord());
   }
+
+  AudioStream& out() {
+    return mixer; 
+  }  
   
-  BigMixer mixer;
 private:
   ReedBank reeds;
+  BigMixer mixer;
   AudioConnection patches[BANK_SIZE] = {
     AudioConnection(reeds.at[0].out(), 0, mixer, 0),
     AudioConnection(reeds.at[1].out(), 0, mixer, 1),

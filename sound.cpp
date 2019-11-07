@@ -50,6 +50,25 @@ void BigMixer::update(void)
   audio_block_t *in, *out=NULL;
   unsigned int channel;
 
+  // update multipliers
+  for (channel=0; channel < MIXER_SIZE; channel++) {
+    int32_t mult = multiplier[channel];
+    int32_t wanted = wanted_multiplier[channel];
+    if (mult < wanted) {
+      mult += 4096;
+      if (mult > wanted) {
+        mult = wanted;
+      }
+      multiplier[channel] = mult;
+    } else if (mult > wanted) {
+      mult -= 4096;
+      if (mult < wanted) {
+        mult = wanted;
+      }
+      multiplier[channel] = mult;
+    }
+  }
+
   for (channel=0; channel < MIXER_SIZE; channel++) {
     if (!out) {
       out = receiveWritable(channel);
