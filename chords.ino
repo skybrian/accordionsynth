@@ -9,7 +9,7 @@ using namespace midi;
 #include "sound.h"
 using namespace sound;
 
-#include "button.h"
+#include "key.h"
 
 const Chord song[] = {
   Chord::octave(B2-1),
@@ -24,6 +24,18 @@ const Chord song[] = {
   Chord::octave(G2),
   Chord::major(G2),
   Chord::major(G2),
+};
+
+key::Layout stradella_major = {
+  {Chord::octave(midi::A2), Chord::octave(E2), Chord::octave(B2)},
+  {Chord::octave(F2), Chord::octave(C2), Chord::octave(G2)},
+  {Chord::major(F2), Chord::major(C2), Chord::major(G2)},
+};
+
+key::Layout stradella_minor = {
+  {Chord::octave(F2), Chord::octave(C2), Chord::octave(G2)},
+  {Chord::major(F2), Chord::major(C2), Chord::major(G2)},
+  {Chord::minor(F2), Chord::minor(C2), Chord::minor(G2)},
 };
 
 AudioControlSGTL5000 shield;
@@ -53,30 +65,31 @@ void playSong(Bank& bank) {
   }  
 }
 
-Button buttons[] = {
-  Button(14, Chord::octave(C2)),
-  Button(16, Chord::octave(G2)),
-  Button(12, Chord::major(C2)),
-  Button(15, Chord::major(G2)),
-};
+
+// Don't use pins already in use by audio shield.
+const key::ColumnPins colPins = {18, 19, 9};
+const key::RowPins rowPins = {16, 17, 14}; // 13 used, 15 is volume
+key::Board keyboard = key::Board(colPins, rowPins);
 
 void setup() {
   Serial.begin(9600);
-  for (unsigned i = 0; i < LENGTH(buttons); i++) {
-    buttons[i].setup();
-  }
   AudioMemory(40);
   shield.enable();
   shield.volume(0.25);
+  //Serial.println("setting up pins");
+  keyboard.setupPins();
+  Serial.println("Ready.");
 }
 
 void loop() {
-  Chord ch = Chord();
-  for (unsigned i = 0; i < LENGTH(buttons); i++) {
-    ch = ch + buttons[i].poll();    
-  }
-  highBank.notesOn(ch);
   
-  //playSong(lowBank);
-  //playSong(highBank);
+//  Chord ch = Chord();
+//  for (unsigned i = 0; i < LENGTH(buttons); i++) {
+//    ch = ch + buttons[i].poll();    
+//  }
+//  highBank.notesOn(ch);
+
+  Chord next = keyboard.poll(stradella_major);
+  highBank.notesOn(next);
+  delay(1);  
 }

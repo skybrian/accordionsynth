@@ -134,7 +134,7 @@ public:
       }
     }
     if (noteCount > 0) {
-      float gain = 0.8/noteCount;
+      float gain = 0.8/(noteCount+5);
       for (int i = 0; i<BANK_SIZE; i++) {
         mixer.gain(i, gain);
       }
