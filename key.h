@@ -41,9 +41,14 @@ public:
     Chord out = Chord();
     for (unsigned c = 0; c < columnCount; c++) {
       uint8_t colPin = cols[c];
+      
       // Pull other side of diodes in this column to LOW.
       pinMode(colPin, OUTPUT);
       digitalWrite(colPin, LOW);
+
+      // Wait for signal to settle to avoid "ghost key" in the first row.
+      delayMicroseconds(1);
+
       // Scan the keys in this column.
       for (unsigned r = 0; r < rowCount; r++) {
         uint8_t rowPin = rows[r];
@@ -59,6 +64,7 @@ public:
           out = out + buttonChord;
         }
       }
+      
       // Disable current flow through diodes in this column; other side could be anything.
       digitalWrite(colPin, HIGH);
       pinMode(colPin, INPUT);

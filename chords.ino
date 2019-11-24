@@ -11,19 +11,11 @@ using namespace sound;
 
 #include "key.h"
 
-const Chord song[] = {
-  Chord::octave(B2-1),
-  Chord::major(B2-1),
-  Chord::major(B2-1),
+const Chord startSong[] = {
   Chord::octave(F2),
-  Chord::major(F2),
-  Chord::major(F2),
+  Chord::octave(midi::A2),
   Chord::octave(C2),
-  Chord::major(C2),
-  Chord::major(C2),
-  Chord::octave(G2),
-  Chord::major(G2),
-  Chord::major(G2),
+  Chord::major(F2)
 };
 
 key::Layout stradella_major = {
@@ -53,19 +45,6 @@ AudioConnection patches[] = {
 
 #define LENGTH(x) (sizeof(x)/sizeof(x[0]))
 
-void playSong(Bank& bank) {
-  for (unsigned i = 0; i < LENGTH(song); i++) {
-    auto ch = song[i];
-//    ch.printTo(Serial);
-//    Serial.println();
-    bank.notesOn(ch);
-    delay(150);
-    bank.notesOff();
-    delay(250);
-  }  
-}
-
-
 // Don't use pins already in use by audio shield.
 const key::ColumnPins colPins = {18, 19, 9};
 const key::RowPins rowPins = {16, 17, 14}; // 13 used, 15 is volume
@@ -73,22 +52,32 @@ key::Board keyboard = key::Board(colPins, rowPins);
 
 void setup() {
   Serial.begin(9600);
-  AudioMemory(40);
+  AudioMemory(20);
   shield.enable();
   shield.volume(0.25);
-  //Serial.println("setting up pins");
   keyboard.setupPins();
-  Serial.println("Ready.");
+
+  playStartSong(highBank);
+  Serial.print("Ready.\nAudio memory used: ");
+  Serial.print(AudioMemoryUsageMax());
+  Serial.print(" blocks.\nProcessor usage: ");
+  Serial.print(AudioProcessorUsageMax());
+  Serial.println("%");
+}
+
+void playStartSong(Bank& bank) {
+  for (unsigned i = 0; i < LENGTH(startSong); i++) {
+    Chord ch = startSong[i];
+//    ch.printTo(Serial);
+//    Serial.println();
+    bank.notesOn(ch);
+    delay(300);
+    bank.notesOff();
+    delay(100);
+  }  
 }
 
 void loop() {
-  
-//  Chord ch = Chord();
-//  for (unsigned i = 0; i < LENGTH(buttons); i++) {
-//    ch = ch + buttons[i].poll();    
-//  }
-//  highBank.notesOn(ch);
-
   Chord next = keyboard.poll(stradella_major);
   highBank.notesOn(next);
   delay(1);  
