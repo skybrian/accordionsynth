@@ -18,16 +18,14 @@ const Chord startSong[] = {
   Chord::major(F2)
 };
 
-key::Layout stradella_major = {
-  {Chord::octave(midi::A2), Chord::octave(E2), Chord::octave(B2)},
-  {Chord::octave(F2), Chord::octave(C2), Chord::octave(G2)},
-  {Chord::major(F2), Chord::major(C2), Chord::major(G2)},
+key::Layout middleLayout = {
+  {Chord::octave(midi::A2), Chord::octave(E2), Chord::octave(B2), Chord::octave(F2+1)}, // counterbass row
+  {Chord::major(F2), Chord::major(C2), Chord::major(G2), Chord::major(D2)} // major chord row
 };
 
-key::Layout stradella_minor = {
-  {Chord::octave(F2), Chord::octave(C2), Chord::octave(G2)},
-  {Chord::major(F2), Chord::major(C2), Chord::major(G2)},
-  {Chord::minor(F2), Chord::minor(C2), Chord::minor(G2)},
+key::Layout bottomLayout = {
+  {Chord::octave(midi::F2), Chord::octave(C2), Chord::octave(G2), Chord::octave(D2)}, // bass row
+  {Chord::minor(F2), Chord::minor(C2), Chord::minor(G2), Chord::minor(D2)} // minor chord row
 };
 
 AudioControlSGTL5000 shield;
@@ -46,16 +44,22 @@ AudioConnection patches[] = {
 #define LENGTH(x) (sizeof(x)/sizeof(x[0]))
 
 // Don't use pins already in use by audio shield.
-const key::ColumnPins colPins = {18, 19, 9};
-const key::RowPins rowPins = {16, 17, 14}; // 13 used, 15 is volume
-key::Board keyboard = key::Board(colPins, rowPins);
+const key::ColumnPins botColPins = {36, 35, 34, 33};
+const key::RowPins botRowPins = {37, 38};
+
+const key::ColumnPins midColPins = {29, 30, 31, 32};
+const key::RowPins midRowPins = {27, 28};
+
+key::Board bottomBoard = key::Board(botColPins, botRowPins);
+key::Board middleBoard = key::Board(midColPins, midRowPins);
 
 void setup() {
   Serial.begin(9600);
   AudioMemory(20);
   shield.enable();
   shield.volume(0.25);
-  keyboard.setupPins();
+  bottomBoard.setupPins();
+  middleBoard.setupPins();
 
   playStartSong(highBank);
   Serial.print("Ready.\nAudio memory used: ");
@@ -78,7 +82,7 @@ void playStartSong(Bank& bank) {
 }
 
 void loop() {
-  Chord next = keyboard.poll(stradella_major);
+  Chord next = bottomBoard.poll(bottomLayout) + middleBoard.poll(middleLayout);
   highBank.notesOn(next);
   delay(1);  
 }

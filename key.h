@@ -10,11 +10,11 @@ namespace key {
 // Number of output pins.
 // Each output pin represents a column. When set to LOW, the keys in that column can be read.
 // (Any other pin state should work to disable the column.)
-const unsigned columnCount = 3;
+const unsigned columnCount = 4;
 
 // Number of input pins.
 // Each input pin represents a row. Reading the pin returns returns LOW if the button is pressed in the enabled column.
-const unsigned rowCount = 3;
+const unsigned rowCount = 2;
 
 typedef uint8_t ColumnPins[columnCount];
 typedef uint8_t RowPins[rowCount];
