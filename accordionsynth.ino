@@ -53,13 +53,16 @@ const key::RowPins midRowPins = {27, 28};
 key::Board bottomBoard = key::Board(botColPins, botRowPins);
 key::Board middleBoard = key::Board(midColPins, midRowPins);
 
+const int led = 13;
+
 void setup() {
   Serial.begin(9600);
   AudioMemory(20);
   shield.enable();
-  shield.volume(0.25);
+  shield.volume(0.9);
   bottomBoard.setupPins();
   middleBoard.setupPins();
+  pinMode(led, OUTPUT);
 
   playStartSong(highBank);
   Serial.print("Ready.\nAudio memory used: ");
@@ -74,9 +77,12 @@ void playStartSong(Bank& bank) {
     Chord ch = startSong[i];
 //    ch.printTo(Serial);
 //    Serial.println();
+
+    digitalWrite(led, HIGH);
     bank.notesOn(ch);
     delay(300);
     bank.notesOff();
+    digitalWrite(led, LOW);
     delay(100);
   }  
 }
