@@ -12,31 +12,28 @@ using namespace sound;
 #include "key.h"
 
 const Chord startSong[] = {
-  Chord::octave(F2),
-  Chord::octave(midi::A2),
-  Chord::octave(C2),
-  Chord::major(F2)
+  Chord(F3),
+  Chord(midi::A3),
+  Chord(C4),
+  Chord::majorUp(F3)
 };
 
-key::Layout layout = {{
-  {Chord::octave(midi::A2), Chord::octave(E2), Chord::octave(B2), Chord::octave(F2+1)}, // counterbass row
-  {Chord::octave(midi::F2), Chord::octave(C2), Chord::octave(G2), Chord::octave(D2)}, // bass row
-  {Chord::major(F2), Chord::major(C2), Chord::major(G2), Chord::major(D2)}, // major chord row
-  {Chord::minor(F2), Chord::minor(C2), Chord::minor(G2), Chord::minor(D2)} // minor chord row
+// Uses notes from E3 to D#4
+key::Layout highStradella = {{
+  {Chord(midi::A3), Chord(E3), Chord(B3), Chord(F3+1)}, // counterbass row
+  {Chord(F3), Chord(C4), Chord(G3), Chord(D4)}, // bass row
+  {Chord::majorUp(F3), Chord::majorDown(C4), Chord::majorUp(G3), Chord::majorDown(D4)}, // major chord row
+  {Chord::minorUp(F3), Chord::minorMid(C4), Chord::minorUp(G3), Chord::minorDown(D4)} // minor chord row
 }};
 
 AudioControlSGTL5000 shield;
-Bank lowBank(G2);
-Bank highBank(E3);
-AudioMixer4 mixer;
+Bank bank(G2);
 AudioOutputI2S out;
 MidiChannel midiChannel(1);
 
 AudioConnection patches[] = {
-  AudioConnection(lowBank.out(), 0, mixer, 0),
-  AudioConnection(highBank.out(), 0, mixer, 1),
-  AudioConnection(mixer, 0, out, 0),
-  AudioConnection(mixer, 0, out, 1),
+  AudioConnection(bank.out(), 0, out, 0),
+  AudioConnection(bank.out(), 0, out, 1)
 };
 
 #define LENGTH(x) (sizeof(x)/sizeof(x[0]))
@@ -63,7 +60,7 @@ void setup() {
   middleBoard.setupPins();
   pinMode(led, OUTPUT);
 
-  playStartSong(highBank);
+  playStartSong(bank);
   Serial.print("Ready.\nAudio memory used: ");
   Serial.print(AudioMemoryUsageMax());
   Serial.print(" blocks.\nProcessor usage: ");
@@ -86,9 +83,11 @@ void playStartSong(Bank& bank) {
   }  
 }
 
+key::Layout layout = highStradella;
+
 void loop() {
   Chord next = bottomBoard.poll(layout) + middleBoard.poll(layout);
-  highBank.notesOn(next);
+  bank.notesOn(next);
   midiChannel.send(next);
   while (usbMIDI.read()) {} // discard incoming
   delay(1);  

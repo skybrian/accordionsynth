@@ -73,7 +73,7 @@ private:
 #error "BigMixer not implemented for this platform"
 #endif
 
-#define MIXER_SIZE 12
+#define MIXER_SIZE 32
 
 class BigMixer : public AudioStream
 {
@@ -111,7 +111,11 @@ private:
   static ReedBank makeReeds(midi::Note n) {
     ReedBank reeds = {{
       Reed(n), Reed(n+1), Reed(n+2), Reed(n+3), Reed(n+4), Reed(n+5),
-      Reed(n+6), Reed(n+7), Reed(n+8), Reed(n+9), Reed(n+10), Reed(n+11)
+      Reed(n+6), Reed(n+7), Reed(n+8), Reed(n+9), Reed(n+10), Reed(n+11),
+      Reed(n+12), Reed(n+13), Reed(n+14), Reed(n+15), Reed(n+16), Reed(n+17),
+      Reed(n+18), Reed(n+19), Reed(n+20), Reed(n+21), Reed(n+22), Reed(n+23),
+      Reed(n+24), Reed(n+25), Reed(n+26), Reed(n+27), Reed(n+28), Reed(n+29),
+      Reed(n+30), Reed(n+31)
     }};
     return reeds;
   }
@@ -165,6 +169,26 @@ private:
     AudioConnection(reeds.at[9].out(), 0, mixer, 9),
     AudioConnection(reeds.at[10].out(), 0, mixer, 10),
     AudioConnection(reeds.at[11].out(), 0, mixer, 11),
+    AudioConnection(reeds.at[12].out(), 0, mixer, 12),
+    AudioConnection(reeds.at[13].out(), 0, mixer, 13),
+    AudioConnection(reeds.at[14].out(), 0, mixer, 14),
+    AudioConnection(reeds.at[15].out(), 0, mixer, 15),
+    AudioConnection(reeds.at[16].out(), 0, mixer, 16),
+    AudioConnection(reeds.at[17].out(), 0, mixer, 17),
+    AudioConnection(reeds.at[18].out(), 0, mixer, 18),
+    AudioConnection(reeds.at[19].out(), 0, mixer, 19),
+    AudioConnection(reeds.at[20].out(), 0, mixer, 20),
+    AudioConnection(reeds.at[21].out(), 0, mixer, 21),
+    AudioConnection(reeds.at[22].out(), 0, mixer, 22),
+    AudioConnection(reeds.at[23].out(), 0, mixer, 23),
+    AudioConnection(reeds.at[24].out(), 0, mixer, 24),
+    AudioConnection(reeds.at[25].out(), 0, mixer, 25),
+    AudioConnection(reeds.at[26].out(), 0, mixer, 26),
+    AudioConnection(reeds.at[27].out(), 0, mixer, 27),
+    AudioConnection(reeds.at[28].out(), 0, mixer, 28),
+    AudioConnection(reeds.at[29].out(), 0, mixer, 29),
+    AudioConnection(reeds.at[30].out(), 0, mixer, 30),
+    AudioConnection(reeds.at[31].out(), 0, mixer, 31)
   };
 };
 

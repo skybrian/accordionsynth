@@ -82,6 +82,7 @@ constexpr Note G3 = F3 + 2;
 constexpr Note A3 = G3 + 2;
 constexpr Note B3 = A3 + 2;
 constexpr Note C4 = B3 + 1;
+constexpr Note D4 = C4 + 2;
 
 constexpr Note A4 = A3 + 12;
 
@@ -114,12 +115,28 @@ public:
     return Chord(octaveBits(n));
   }
 
-  constexpr static Chord major(Note n) {
-    return Chord(octaveBits(n) | octaveBits(n + 4) | octaveBits(n + 7));
+  constexpr static Chord majorUp(Note n) {
+    return Chord(toBit(n) | toBit(n + 4) | toBit(n + 7));
   }
 
-  constexpr static Chord minor(Note n) {
-    return Chord(octaveBits(n) | octaveBits(n + 3) | octaveBits(n + 7));
+  constexpr static Chord majorDown(Note n) {
+    return Chord(toBit(n) | toBit(n - 8) | toBit(n - 5));
+  }
+
+  constexpr static Chord majorMid(Note n) {
+    return Chord(toBit(n) | toBit(n + 4) | toBit(n - 5));
+  }
+
+  constexpr static Chord minorUp(Note n) {
+    return Chord(toBit(n) | toBit(n + 3) | toBit(n + 7));
+  }
+
+  constexpr static Chord minorDown(Note n) {
+    return Chord(toBit(n) | toBit(n - 9) | toBit(n - 5));
+  }
+
+  constexpr static Chord minorMid(Note n) {
+    return Chord(toBit(n) | toBit(n + 3) | toBit(n - 5));
   }
 
   // Returns the union of the notes in both chords.
