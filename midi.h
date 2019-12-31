@@ -64,7 +64,9 @@ private:
 // Midi charts may label notes differently!
 
 constexpr Note A0 = Note(21);
-constexpr Note A1 = A0 + 12;
+constexpr Note G1 = A0 + 10;
+constexpr Note A1 = G1 + 2;
+// constexpr Note B1 = A1 + 2; // B1 conflicts with teensy macro
 
 constexpr Note C2 = A1 + 3;
 constexpr Note D2 = C2 + 2;
@@ -88,7 +90,7 @@ constexpr Note A4 = A3 + 12;
 
 // 128 bits would cover the entire MIDI range, but just using 64 will do.
 
-constexpr Note ChordBase = G2;
+constexpr Note ChordBase = G1;
 constexpr Note ChordLimit = ChordBase + 64;
 
 class Chord {
