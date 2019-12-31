@@ -3,6 +3,7 @@
 
 #include <cstdint>
 #include "Print.h"
+#include "MIDIUSB.h"
 
 // Some basic music theory, defined using midi note values.
 
@@ -144,6 +145,25 @@ public:
       }
     }
     out.print(")");
+  }
+};
+
+class MidiChannel {
+private:
+  int chan;
+  Chord prev;
+public:
+  constexpr MidiChannel(int channel) : chan(channel) {}
+
+  void send(Chord next) {
+    for (Note n = ChordBase; n < ChordLimit; n = n + 1) {
+        if (next.has(n) && !prev.has(n)) {
+          usbMIDI.sendNoteOn(n.toMidiNumber(), 99, chan);
+        } else if (prev.has(n) && !next.has(n)) {
+          usbMIDI.sendNoteOff(n.toMidiNumber(), 0, chan);
+        }
+    }
+    prev = next;
   }
 };
 

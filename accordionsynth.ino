@@ -33,6 +33,7 @@ Bank lowBank(G2);
 Bank highBank(E3);
 AudioMixer4 mixer;
 AudioOutputI2S out;
+MidiChannel midiChannel(1);
 
 AudioConnection patches[] = {
   AudioConnection(lowBank.out(), 0, mixer, 0),
@@ -59,7 +60,7 @@ void setup() {
   Serial.begin(9600);
   AudioMemory(20);
   shield.enable();
-  shield.volume(0.9);
+  shield.volume(0.8);
   bottomBoard.setupPins();
   middleBoard.setupPins();
   pinMode(led, OUTPUT);
@@ -90,5 +91,7 @@ void playStartSong(Bank& bank) {
 void loop() {
   Chord next = bottomBoard.poll(bottomLayout) + middleBoard.poll(middleLayout);
   highBank.notesOn(next);
+  midiChannel.send(next);
+  while (usbMIDI.read()) {} // discard incoming
   delay(1);  
 }
