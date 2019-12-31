@@ -7,20 +7,23 @@ using namespace midi;
 
 namespace key {
 
-// Number of output pins.
-// Each output pin represents a column. When set to LOW, the keys in that column can be read.
-// (Any other pin state should work to disable the column.)
 const unsigned columnCount = 4;
 
-// Number of input pins.
-// Each input pin represents a row. Reading the pin returns returns LOW if the button is pressed in the enabled column.
-const unsigned rowCount = 2;
+const unsigned rowCount = 4;
 
+// Column-enabling pins.
+// Each pin controls a column in the layout. When set to LOW, the keys in that column can be read.
+// (Any other pin state should work to disable the column.)
 typedef uint8_t ColumnPins[columnCount];
+
+// Row-reading pins.
+// Each pin reads a row in the layout. Reading the pin returns LOW if the button is pressed in the enabled column.
 typedef uint8_t RowPins[rowCount];
 
 // A Layout contains the Chord to play for each key.
-typedef Chord Layout[rowCount][columnCount];
+typedef struct {
+  Chord chord[rowCount][columnCount];
+} Layout;
 
 // A keyboard matrix circuit that's connected via the given pins.
 class Board {
@@ -60,7 +63,7 @@ public:
 //          Serial.print(c);
 //          Serial.print(", r=");
 //          Serial.println(r);
-          Chord buttonChord = layout[r][c];
+          Chord buttonChord = layout.chord[r][c];
           out = out + buttonChord;
         }
       }

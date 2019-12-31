@@ -18,15 +18,12 @@ const Chord startSong[] = {
   Chord::major(F2)
 };
 
-key::Layout middleLayout = {
+key::Layout layout = {{
   {Chord::octave(midi::A2), Chord::octave(E2), Chord::octave(B2), Chord::octave(F2+1)}, // counterbass row
-  {Chord::major(F2), Chord::major(C2), Chord::major(G2), Chord::major(D2)} // major chord row
-};
-
-key::Layout bottomLayout = {
   {Chord::octave(midi::F2), Chord::octave(C2), Chord::octave(G2), Chord::octave(D2)}, // bass row
+  {Chord::major(F2), Chord::major(C2), Chord::major(G2), Chord::major(D2)}, // major chord row
   {Chord::minor(F2), Chord::minor(C2), Chord::minor(G2), Chord::minor(D2)} // minor chord row
-};
+}};
 
 AudioControlSGTL5000 shield;
 Bank lowBank(G2);
@@ -45,14 +42,15 @@ AudioConnection patches[] = {
 #define LENGTH(x) (sizeof(x)/sizeof(x[0]))
 
 // Don't use pins already in use by audio shield.
+// We have two boards with different column-enabling pins.
 const key::ColumnPins botColPins = {36, 35, 34, 33};
-const key::RowPins botRowPins = {37, 38};
-
 const key::ColumnPins midColPins = {29, 30, 31, 32};
-const key::RowPins midRowPins = {27, 28};
 
-key::Board bottomBoard = key::Board(botColPins, botRowPins);
-key::Board middleBoard = key::Board(midColPins, midRowPins);
+// Read all the same rows for both, but half the rows won't work for each board.
+const key::RowPins rowPins = {27, 37, 28, 38};
+
+key::Board bottomBoard = key::Board(botColPins, rowPins);
+key::Board middleBoard = key::Board(midColPins, rowPins);
 
 const int led = 13;
 
@@ -89,7 +87,7 @@ void playStartSong(Bank& bank) {
 }
 
 void loop() {
-  Chord next = bottomBoard.poll(bottomLayout) + middleBoard.poll(middleLayout);
+  Chord next = bottomBoard.poll(layout) + middleBoard.poll(layout);
   highBank.notesOn(next);
   midiChannel.send(next);
   while (usbMIDI.read()) {} // discard incoming
