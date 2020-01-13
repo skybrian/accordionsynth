@@ -1,4 +1,5 @@
 #include <Audio.h>
+#include <Metro.h>
 #include <Wire.h>
 #include <SPI.h>
 #include <SD.h>
@@ -36,12 +37,14 @@ key::Layout lowStradella = {{
 
 AudioControlSGTL5000 shield;
 Bank bank(G1);
+AudioFilterBiquad filter;
 AudioOutputI2S out;
 MidiChannel midiChannel(1);
 
 AudioConnection patches[] = {
-  AudioConnection(bank.out(), 0, out, 0),
-  AudioConnection(bank.out(), 0, out, 1)
+  AudioConnection(bank.out(), 0, filter, 0),
+  AudioConnection(filter, 0, out, 0),
+  AudioConnection(filter, 0, out, 1)
 };
 
 #define LENGTH(x) (sizeof(x)/sizeof(x[0]))
@@ -59,9 +62,13 @@ key::Board middleBoard = key::Board(midColPins, rowPins);
 
 const int led = 13;
 
+const int audioMemory = 20;
+
 void setup() {
   Serial.begin(9600);
-  AudioMemory(20);
+  AudioMemory(audioMemory);
+  filter.setLowpass(0, 2000, 0.7071);
+  filter.setLowpass(1, 2000, 0.7071);
   shield.enable();
   shield.volume(0.8);
   bottomBoard.setupPins();
@@ -91,14 +98,31 @@ void playStartSong(Bank& bank) {
   }  
 }
 
+Metro cpuInterval(10*1000);
+
+void checkProcessorUsage() {
+  if (cpuInterval.check()) {
+    int usage = AudioProcessorUsageMax();
+    if (usage > 90) {
+      Serial.print("Processor usage: ");
+      Serial.print(usage);
+      Serial.print("% Max memory: ");
+      Serial.print(AudioMemoryUsageMax());
+      Serial.print(" of ");
+      Serial.println(audioMemory);
+      AudioProcessorUsageMaxReset();
+    }
+    cpuInterval.reset();
+  }
+}
+
 key::Layout layout = lowStradella;
 
 void loop() {
   Chord next = bottomBoard.poll(layout) + middleBoard.poll(layout);
-// next.printTo(Serial);
-// Serial.println();
   bank.notesOn(next);
   midiChannel.send(next);
   while (usbMIDI.read()) {} // discard incoming
-  delay(1);  
+  checkProcessorUsage();
+  delay(1);
 }

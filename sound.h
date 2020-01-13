@@ -4,8 +4,8 @@
 
 namespace sound {
 
-#define WAVE_COUNT 4
-const float harmonics[WAVE_COUNT] = {0.5, 1.0, 1.0, 0.05};
+#define WAVE_COUNT 1
+const float harmonics[WAVE_COUNT] = {1.0};
 
 class Reed {
 public:
@@ -33,7 +33,7 @@ public:
 
   void begin() {
     for (int i = 0; i < WAVE_COUNT; i++) {
-      waves[i].begin(WAVEFORM_SINE);
+      waves[i].begin(WAVEFORM_SAWTOOTH);
     }
   }
 
@@ -63,15 +63,9 @@ private:
   AudioSynthWaveform waves[WAVE_COUNT];
   AudioEffectEnvelope env[WAVE_COUNT];
   AudioMixer4 mixer;
-  AudioConnection patches[8] = {
+  AudioConnection patches[2] = {
     AudioConnection(waves[0], 0, env[0], 0),
-    AudioConnection(waves[1], 0, env[1], 0),
-    AudioConnection(waves[2], 0, env[2], 0),
-    AudioConnection(waves[3], 0, env[3], 0),
     AudioConnection(env[0], 0, mixer, 0),
-    AudioConnection(env[1], 0, mixer, 1),
-    AudioConnection(env[2], 0, mixer, 2),
-    AudioConnection(env[3], 0, mixer, 3),
   };
 };
 
@@ -79,7 +73,7 @@ private:
 #error "BigMixer not implemented for this platform"
 #endif
 
-#define MIXER_SIZE 32
+#define MIXER_SIZE 36
 
 class BigMixer : public AudioStream
 {
@@ -112,7 +106,7 @@ struct ReedBank {
   Reed at[BANK_SIZE];
 };
 
-const int doubledNotes = 6;
+const int doubledNotes = 8;
 
 class Bank {
 private:
@@ -123,7 +117,7 @@ private:
       Reed(n+12), Reed(n+13), Reed(n+14), Reed(n+15), Reed(n+16), Reed(n+17),
       Reed(n+18), Reed(n+19), Reed(n+20), Reed(n+21), Reed(n+22), Reed(n+23),
       Reed(n+24), Reed(n+25), Reed(n+26), Reed(n+27), Reed(n+28), Reed(n+29),
-      Reed(n+30), Reed(n+31)
+      Reed(n+30), Reed(n+31), Reed(n+32), Reed(n+33), Reed(n+34), Reed(n+35)
     }};
     return reeds;
   }
@@ -156,15 +150,17 @@ public:
       }
     }
     if (noteCount > 0) {
+      //orig.printTo(Serial);
+      //Serial.println();
       float gain = 0.8/(noteCount+5);
       for (int i = 0; i<BANK_SIZE; i++) {
         float g = gain;
         if (i < doubledNotes) {
           // Fade the bottom notes for a Shepard tone effect.
-          g = g * (float)i/doubledNotes;
+          g = g * (float)(i+1)/doubledNotes;
         } else if (i >= 12 && i < 12 + doubledNotes && !orig.has(reeds.at[i].note)) {
           // Fade the doubled notes unless they were originally played.
-          g = g * (float)(doubledNotes-(i-12))/doubledNotes;
+          g = g * (float)(doubledNotes-(i+1-12))/doubledNotes;
         }
         mixer.gain(i, g);
       }
@@ -214,7 +210,11 @@ private:
     AudioConnection(reeds.at[28].out(), 0, mixer, 28),
     AudioConnection(reeds.at[29].out(), 0, mixer, 29),
     AudioConnection(reeds.at[30].out(), 0, mixer, 30),
-    AudioConnection(reeds.at[31].out(), 0, mixer, 31)
+    AudioConnection(reeds.at[31].out(), 0, mixer, 31),
+    AudioConnection(reeds.at[32].out(), 0, mixer, 32),
+    AudioConnection(reeds.at[33].out(), 0, mixer, 33),
+    AudioConnection(reeds.at[34].out(), 0, mixer, 34),
+    AudioConnection(reeds.at[35].out(), 0, mixer, 35)
   };
 };
 
