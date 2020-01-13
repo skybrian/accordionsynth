@@ -25,6 +25,12 @@ public:
     }
   }
 
+  void sustain(float level) {
+    for(int i = 0; i < WAVE_COUNT; i++) {
+      env[i].sustain(level);
+    }
+  }
+
   void begin() {
     for (int i = 0; i < WAVE_COUNT; i++) {
       waves[i].begin(WAVEFORM_SINE);
@@ -106,6 +112,8 @@ struct ReedBank {
   Reed at[BANK_SIZE];
 };
 
+const int doubledNotes = 6;
+
 class Bank {
 private:
   static ReedBank makeReeds(midi::Note n) {
@@ -128,6 +136,16 @@ public:
   }
 
   void notesOn(midi::Chord chord) {
+    midi::Chord orig = chord;
+
+    // double the bottom notes
+    for (int i = 0; i<doubledNotes; i++) {
+      midi::Note n = reeds.at[i].note;
+      if (chord.has(n)) {
+        chord = chord + (n + 12);
+      }
+    }
+
     int noteCount = 0;
     for (int i = 0; i<BANK_SIZE; i++) {
       if (chord.has(reeds.at[i].note)) {
@@ -140,7 +158,15 @@ public:
     if (noteCount > 0) {
       float gain = 0.8/(noteCount+5);
       for (int i = 0; i<BANK_SIZE; i++) {
-        mixer.gain(i, gain);
+        float g = gain;
+        if (i < doubledNotes) {
+          // Fade the bottom notes for a Shepard tone effect.
+          g = g * (float)i/doubledNotes;
+        } else if (i >= 12 && i < 12 + doubledNotes && !orig.has(reeds.at[i].note)) {
+          // Fade the doubled notes unless they were originally played.
+          g = g * (float)(doubledNotes-(i-12))/doubledNotes;
+        }
+        mixer.gain(i, g);
       }
     }
   }

@@ -26,12 +26,12 @@ key::Layout highStradella = {{
   {Chord::minorUp(F3), Chord::minorMid(C4), Chord::minorUp(G3), Chord::minorDown(D4)} // minor chord row
 }};
 
-// Uses bass notes from G1-F#2, chords G2 to F#3
+// Uses bass notes from G1-F#2, chords E3 to D#4
 key::Layout lowStradella = {{
   {Chord(midi::A1), Chord(E2), Chord(C2-1), Chord(F2+1)}, // counterbass row
   {Chord(F2), Chord(C2), Chord(G1), Chord(D2)}, // bass row
-  {Chord::majorDown(F3), Chord::majorMid(C3), Chord::majorUp(G2), Chord::majorMid(D3)}, // major chord row
-  {Chord::minorDown(F3), Chord::minorMid(C3), Chord::minorUp(G2), Chord::minorMid(D3)} // minor chord row
+  {Chord::majorUp(F3), Chord::majorDown(C4), Chord::majorUp(G3), Chord::majorDown(D4)}, // major chord row
+  {Chord::minorUp(F3), Chord::minorMid(C4), Chord::minorUp(G3), Chord::minorDown(D4)} // minor chord row
 }};
 
 AudioControlSGTL5000 shield;
@@ -95,6 +95,8 @@ key::Layout layout = lowStradella;
 
 void loop() {
   Chord next = bottomBoard.poll(layout) + middleBoard.poll(layout);
+// next.printTo(Serial);
+// Serial.println();
   bank.notesOn(next);
   midiChannel.send(next);
   while (usbMIDI.read()) {} // discard incoming
