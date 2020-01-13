@@ -4,24 +4,24 @@
 
 namespace sound {
 
-#define WAVE_COUNT 1
-const float harmonics[WAVE_COUNT] = {1.0};
+const float cent = 1.0005777;
+
+#define WAVE_COUNT 2
+const float detune[WAVE_COUNT] = {1.0, cent};
 
 class Reed {
 public:
   Reed(midi::Note n) : note(n) {
-    float mixedAmp = 0;
     for (int i = 0; i < WAVE_COUNT; i++) {
-      waves[i].amplitude(harmonics[i]);
-      waves[i].frequency(n.frequency() * (i + 1));
-      mixedAmp += harmonics[i];
-      env[i].attack(20+i*40);
+      waves[i].amplitude(1.0);
+      waves[i].frequency(n.frequency() * detune[i]);
+      env[i].attack(20);
       env[i].decay(0);
       env[i].sustain(1.0);
       env[i].release(20);
     }
     for (int i = 0; i < WAVE_COUNT; i++) {
-      mixer.gain(i, harmonics[i]/mixedAmp);
+      mixer.gain(i, 1.0/WAVE_COUNT);
     }
   }
 
