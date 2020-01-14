@@ -7,7 +7,8 @@ namespace sound {
 const float cent = 1.0005777;
 
 #define WAVE_COUNT 2
-const float detune[WAVE_COUNT] = {1.0, cent};
+const float detune[WAVE_COUNT] = {1.0/cent*cent, cent*cent};
+//const float detune[WAVE_COUNT] = {1.0};
 
 class Reed {
 public:
@@ -15,13 +16,13 @@ public:
     for (int i = 0; i < WAVE_COUNT; i++) {
       waves[i].amplitude(1.0);
       waves[i].frequency(n.frequency() * detune[i]);
-      env[i].attack(20);
+      env[i].attack(60);
       env[i].decay(0);
       env[i].sustain(1.0);
-      env[i].release(20);
+      env[i].release(60);
     }
     for (int i = 0; i < WAVE_COUNT; i++) {
-      mixer.gain(i, 1.0/WAVE_COUNT);
+      mixer.gain(i, 0.5/WAVE_COUNT);
     }
   }
 
@@ -40,6 +41,10 @@ public:
     AudioNoInterrupts();
     for (int i = 0; i < WAVE_COUNT; i++) {
       // Start detuned saws in phase.
+      // This doesn't work by default due to a bug:
+      // https://github.com/PaulStoffregen/Audio/issues/312
+      // I edited the code directly:
+      // /Applications/Arduino.app/Contents/Java/hardware/teensy/avr/libraries/Audio/synth_waveform.h
       waves[i].begin(WAVEFORM_SAWTOOTH);
       env[i].noteOn();
     }
@@ -62,11 +67,13 @@ private:
   AudioSynthWaveform waves[WAVE_COUNT];
   AudioEffectEnvelope env[WAVE_COUNT];
   AudioMixer4 mixer;
-  AudioConnection patches[4] = {
+  AudioConnection wavePatches[WAVE_COUNT] = {
     AudioConnection(waves[0], 0, env[0], 0),
+    AudioConnection(waves[1], 0, env[1], 0)
+  };
+  AudioConnection envPatches[WAVE_COUNT] = {
     AudioConnection(env[0], 0, mixer, 0),
-    AudioConnection(waves[1], 0, env[1], 0),
-    AudioConnection(env[1], 0, mixer, 1),
+    AudioConnection(env[1], 0, mixer, 1)
   };
 };
 
@@ -112,7 +119,8 @@ struct ReedBank {
   Reed at[BANK_SIZE];
 };
 
-const int doubledNotes = 8;
+const int doubledNotes = 6;
+const int fadeFactor = 2;
 
 class Bank {
 private:
@@ -160,10 +168,10 @@ public:
         float g = gain;
         if (i < doubledNotes) {
           // Fade the bottom notes for a Shepard tone effect.
-          g = g * (float)(i+1)/doubledNotes;
+          g = g * (float)(i+doubledNotes*(fadeFactor-1))/(doubledNotes*fadeFactor);
         } else if (i >= 12 && i < 12 + doubledNotes && !orig.has(reeds.at[i].note)) {
           // Fade the doubled notes unless they were originally played.
-          g = g * (float)(doubledNotes-(i+1-12))/doubledNotes;
+          g = g * (float)(doubledNotes*fadeFactor-(i-12))/(doubledNotes*fadeFactor);
         }
         mixer.gain(i, g);
       }
