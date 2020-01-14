@@ -85,6 +85,7 @@ constexpr Note A3 = G3 + 2;
 constexpr Note B3 = A3 + 2;
 constexpr Note C4 = B3 + 1;
 constexpr Note D4 = C4 + 2;
+constexpr Note E4 = D4 + 2;
 
 constexpr Note A4 = A3 + 12;
 

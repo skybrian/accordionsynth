@@ -25,27 +25,26 @@ public:
     }
   }
 
-  void sustain(float level) {
-    for(int i = 0; i < WAVE_COUNT; i++) {
-      env[i].sustain(level);
-    }
+  bool isActive() {
+    return env[0].isActive();
   }
 
-  void begin() {
-    for (int i = 0; i < WAVE_COUNT; i++) {
-      waves[i].begin(WAVEFORM_SAWTOOTH);
-    }
+  bool isSustain() {
+    return env[0].isSustain();
   }
 
-  void noteOn() {
-    if (env[0].isActive()) {
-      return;
+  bool noteOn() {
+    if (isActive()) {
+      return false;
     }
     AudioNoInterrupts();
     for (int i = 0; i < WAVE_COUNT; i++) {
+      // Start detuned saws in phase.
+      waves[i].begin(WAVEFORM_SAWTOOTH);
       env[i].noteOn();
     }
     AudioInterrupts();
+    return true;
   }
 
   void noteOff() {
@@ -63,9 +62,11 @@ private:
   AudioSynthWaveform waves[WAVE_COUNT];
   AudioEffectEnvelope env[WAVE_COUNT];
   AudioMixer4 mixer;
-  AudioConnection patches[2] = {
+  AudioConnection patches[4] = {
     AudioConnection(waves[0], 0, env[0], 0),
     AudioConnection(env[0], 0, mixer, 0),
+    AudioConnection(waves[1], 0, env[1], 0),
+    AudioConnection(env[1], 0, mixer, 1),
   };
 };
 
@@ -92,6 +93,11 @@ public:
     if (gain > 32767.0f) gain = 32767.0f;
     else if (gain < -32767.0f) gain = -32767.0f;
     wanted_multiplier[channel] = gain * 65536.0f; // TODO: proper roundoff?
+  }
+
+  float getGain(unsigned int channel) {
+    if (channel >= MIXER_SIZE) return 0;
+    return multiplier[channel] / 65536.0f;
   }
   
 private:
@@ -124,9 +130,6 @@ private:
 
 public:
   Bank(midi::Note n) : reeds(makeReeds(n)) {
-    for (int i = 0; i < BANK_SIZE; i++) {
-      reeds.at[i].begin();
-    }
   }
 
   void notesOn(midi::Chord chord) {
@@ -142,16 +145,16 @@ public:
 
     int noteCount = 0;
     for (int i = 0; i<BANK_SIZE; i++) {
-      if (chord.has(reeds.at[i].note)) {
+      midi::Note n = reeds.at[i].note;
+      if (chord.has(n)) {
         reeds.at[i].noteOn();
         noteCount++;
-      } else {
+      } else if (prev.has(n)) {
+        // noteOff is not idempoent. See: https://github.com/PaulStoffregen/Audio/issues/311
         reeds.at[i].noteOff();
       }
     }
     if (noteCount > 0) {
-      //orig.printTo(Serial);
-      //Serial.println();
       float gain = 0.8/(noteCount+5);
       for (int i = 0; i<BANK_SIZE; i++) {
         float g = gain;
@@ -165,10 +168,26 @@ public:
         mixer.gain(i, g);
       }
     }
+    prev = chord;
   }
 
   void notesOff() {
     notesOn(midi::Chord());
+  }
+
+  void plotReedState(Print& out, midi::Note note) {
+    midi::Note base = reeds.at[0].note;
+    signed char index = note - base;
+    if (index < 0 || index > BANK_SIZE) return;
+
+    int active = reeds.at[index].isActive() ? 1 : 0;
+    int sustain = reeds.at[index].isSustain() ? 1 : 0;
+    float gain = mixer.getGain(index);
+    out.print(active);
+    out.print(" ");
+    out.print(sustain);
+    out.print(" ");
+    out.println(gain);
   }
 
   AudioStream& out() {
@@ -178,6 +197,7 @@ public:
 private:
   ReedBank reeds;
   BigMixer mixer;
+  midi::Chord prev;
   AudioConnection patches[BANK_SIZE] = {
     AudioConnection(reeds.at[0].out(), 0, mixer, 0),
     AudioConnection(reeds.at[1].out(), 0, mixer, 1),

@@ -118,11 +118,16 @@ void checkProcessorUsage() {
 
 key::Layout layout = lowStradella;
 
+//Metro plotInterval(100);
+
 void loop() {
   Chord next = bottomBoard.poll(layout) + middleBoard.poll(layout);
   bank.notesOn(next);
   midiChannel.send(next);
   while (usbMIDI.read()) {} // discard incoming
   checkProcessorUsage();
+//  if (plotInterval.check()) {
+//    bank.plotReedState(Serial, E4-1);
+//  }
   delay(1);
 }
