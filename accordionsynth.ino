@@ -64,11 +64,14 @@ const int led = 13;
 
 const int audioMemory = 20;
 
+const double sortaNotch[] = {1.0, 1.93, 0.948, 1.85, 0.863}; 
+
 void setup() {
   Serial.begin(9600);
   AudioMemory(audioMemory);
-  filter.setLowpass(0, 2000, 0.7071);
-  filter.setLowpass(1, 2000, 0.7071);
+  filter.setLowpass(0, 3863, 0.707);
+  filter.setLowpass(1, 3863, 0.707);
+  filter.setCoefficients(3, sortaNotch);
   shield.enable();
   shield.volume(0.8);
   bottomBoard.setupPins();

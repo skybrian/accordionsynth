@@ -6,9 +6,8 @@ namespace sound {
 
 const float cent = 1.0005777;
 
-#define WAVE_COUNT 2
-const float detune[WAVE_COUNT] = {1.0/cent*cent, cent*cent};
-//const float detune[WAVE_COUNT] = {1.0};
+#define WAVE_COUNT 3
+const float detune[WAVE_COUNT] = {-cent, 1.0, cent};
 
 class Reed {
 public:
@@ -16,10 +15,10 @@ public:
     for (int i = 0; i < WAVE_COUNT; i++) {
       waves[i].amplitude(1.0);
       waves[i].frequency(n.frequency() * detune[i]);
-      env[i].attack(60);
+      env[i].attack(40);
       env[i].decay(0);
       env[i].sustain(1.0);
-      env[i].release(60);
+      env[i].release(40);
     }
     for (int i = 0; i < WAVE_COUNT; i++) {
       mixer.gain(i, 0.5/WAVE_COUNT);
@@ -40,12 +39,13 @@ public:
     }
     AudioNoInterrupts();
     for (int i = 0; i < WAVE_COUNT; i++) {
-      // Start detuned saws in phase.
+      // Start detuned saws slightly out of phase.
       // This doesn't work by default due to a bug:
       // https://github.com/PaulStoffregen/Audio/issues/312
       // I edited the code directly:
       // /Applications/Arduino.app/Contents/Java/hardware/teensy/avr/libraries/Audio/synth_waveform.h
       waves[i].begin(WAVEFORM_SAWTOOTH);
+      waves[i].phase(i*20);
       env[i].noteOn();
     }
     AudioInterrupts();
@@ -69,11 +69,13 @@ private:
   AudioMixer4 mixer;
   AudioConnection wavePatches[WAVE_COUNT] = {
     AudioConnection(waves[0], 0, env[0], 0),
-    AudioConnection(waves[1], 0, env[1], 0)
+    AudioConnection(waves[1], 0, env[1], 0),
+    AudioConnection(waves[2], 0, env[2], 0)
   };
   AudioConnection envPatches[WAVE_COUNT] = {
     AudioConnection(env[0], 0, mixer, 0),
-    AudioConnection(env[1], 0, mixer, 1)
+    AudioConnection(env[1], 0, mixer, 1),
+    AudioConnection(env[2], 0, mixer, 2)
   };
 };
 
