@@ -5,8 +5,8 @@ $Descr A 11000 8500
 encoding utf-8
 Sheet 1 1
 Title "16 Button Board for Accordion Synthesizer Prototype 4"
-Date "2020-01-30"
-Rev ""
+Date "2020-01-31"
+Rev "1"
 Comp ""
 Comment1 ""
 Comment2 ""
