@@ -59,7 +59,7 @@ U 1 1 5E2E25E2
 P 1950 4300
 F 0 "JP2" V 1950 4367 50  0000 L CNN
 F 1 "SolderJumper" V 1905 4368 50  0001 L CNN
-F 2 "Jumper:SolderJumper-3_P1.3mm_Bridged12_Pad1.0x1.5mm" H 1950 4300 50  0001 C CNN
+F 2 "16buttons:SolderJumper_Bridged12" H 1950 4300 50  0001 C CNN
 F 3 "~" H 1950 4300 50  0001 C CNN
 	1    1950 4300
 	0    -1   -1   0   
@@ -72,7 +72,7 @@ U 1 1 5E2E6B7C
 P 2350 4400
 F 0 "JP1" V 2350 4467 50  0000 L CNN
 F 1 "SolderJumper" V 2305 4468 50  0001 L CNN
-F 2 "Jumper:SolderJumper-3_P1.3mm_Bridged12_Pad1.0x1.5mm" H 2350 4400 50  0001 C CNN
+F 2 "16buttons:SolderJumper_Bridged12" H 2350 4400 50  0001 C CNN
 F 3 "~" H 2350 4400 50  0001 C CNN
 	1    2350 4400
 	0    -1   -1   0   
@@ -83,7 +83,7 @@ U 1 1 5E2E8DC6
 P 2750 4500
 F 0 "JP0" V 2750 4567 50  0000 L CNN
 F 1 "SolderJumper" V 2705 4568 50  0001 L CNN
-F 2 "Jumper:SolderJumper-3_P1.3mm_Bridged12_Pad1.0x1.5mm" H 2750 4500 50  0001 C CNN
+F 2 "16buttons:SolderJumper_Bridged12" H 2750 4500 50  0001 C CNN
 F 3 "~" H 2750 4500 50  0001 C CNN
 	1    2750 4500
 	0    -1   -1   0   
