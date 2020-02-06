@@ -6,8 +6,8 @@ namespace sound {
 
 const float cent = 1.0005777;
 
-#define WAVE_COUNT 3
-const float detune[WAVE_COUNT] = {-cent, 1.0, cent};
+#define WAVE_COUNT 2
+const float detune[WAVE_COUNT] = {-cent*cent, cent*cent};
 
 class Reed {
 public:
@@ -70,12 +70,10 @@ private:
   AudioConnection wavePatches[WAVE_COUNT] = {
     AudioConnection(waves[0], 0, env[0], 0),
     AudioConnection(waves[1], 0, env[1], 0),
-    AudioConnection(waves[2], 0, env[2], 0)
   };
   AudioConnection envPatches[WAVE_COUNT] = {
     AudioConnection(env[0], 0, mixer, 0),
     AudioConnection(env[1], 0, mixer, 1),
-    AudioConnection(env[2], 0, mixer, 2)
   };
 };
 
