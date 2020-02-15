@@ -3,6 +3,8 @@
 #include <Wire.h>
 #include <SPI.h>
 #include <SD.h>
+#include <Adafruit_MSA301.h>
+
 
 #include "midi.h"
 using namespace midi;
@@ -11,6 +13,7 @@ using namespace midi;
 using namespace sound;
 
 #include "key.h"
+#include "bellows.h"
 
 const Chord startSong[] = {
   Chord(F3),
@@ -38,13 +41,18 @@ key::Layout lowStradella = {{
 AudioControlSGTL5000 shield;
 Bank bank(G1);
 AudioFilterBiquad filter;
+AudioSynthWaveformDc dc;
+AudioEffectMultiply gain;
+
 AudioOutputI2S out;
 MidiChannel midiChannel(1);
 
 AudioConnection patches[] = {
   AudioConnection(bank.out(), 0, filter, 0),
-  AudioConnection(filter, 0, out, 0),
-  AudioConnection(filter, 0, out, 1)
+  AudioConnection(filter, 0, gain, 0),
+  AudioConnection(dc, 0, gain, 1),
+  AudioConnection(gain, 0, out, 0),
+  AudioConnection(gain, 0, out, 1)
 };
 
 #define LENGTH(x) (sizeof(x)/sizeof(x[0]))
@@ -60,11 +68,15 @@ const key::RowPins rowPins = {27, 37, 28, 38};
 key::Board bottomBoard = key::Board(botColPins, rowPins);
 key::Board middleBoard = key::Board(midColPins, rowPins);
 
+Adafruit_MSA301 accel;
+
 const int led = 13;
 
 const int audioMemory = 20;
 
 const double sortaNotch[] = {1.0, 1.93, 0.948, 1.85, 0.863}; 
+
+Bellows bellows;
 
 void setup() {
   Serial.begin(9600);
@@ -74,9 +86,12 @@ void setup() {
   filter.setCoefficients(3, sortaNotch);
   shield.enable();
   shield.volume(0.8);
+  dc.amplitude(1.0);
   bottomBoard.setupPins();
   middleBoard.setupPins();
   pinMode(led, OUTPUT);
+
+  bellows.begin();
 
   playStartSong(bank);
   Serial.print("Ready.\nAudio memory used: ");
@@ -84,6 +99,8 @@ void setup() {
   Serial.print(" blocks.\nProcessor usage: ");
   Serial.print(AudioProcessorUsageMax());
   Serial.println("%");
+
+  bellows.update();
 }
 
 void playStartSong(Bank& bank) {
@@ -121,16 +138,37 @@ void checkProcessorUsage() {
 
 key::Layout layout = lowStradella;
 
+Metro bellowsInterval(10);
 //Metro plotInterval(100);
 
 void loop() {
   Chord next = bottomBoard.poll(layout) + middleBoard.poll(layout);
   bank.notesOn(next);
+
+  if (bellowsInterval.check()) {
+    float velo = bellows.update();
+    dc.amplitude(pressureCurve(velo), 10);
+    bellows.plot(Serial);
+  }
+
   midiChannel.send(next);
   while (usbMIDI.read()) {} // discard incoming
+
   checkProcessorUsage();
 //  if (plotInterval.check()) {
 //    bank.plotReedState(Serial, E4-1);
 //  }
   delay(1);
+}
+
+float pressureCurve(float x) {
+  if (x < 0.04) {
+    return 0;
+  }
+  x -= 0.04;
+  x *= 6.0;
+  if (x > 1.0) {
+    return 1.0;
+  }
+  return x;
 }
