@@ -3,7 +3,6 @@
 #include <Wire.h>
 #include <SPI.h>
 #include <SD.h>
-#include <Adafruit_MSA301.h>
 
 
 #include "midi.h"
@@ -68,8 +67,6 @@ const key::RowPins rowPins = {27, 37, 28, 38};
 key::Board bottomBoard = key::Board(botColPins, rowPins);
 key::Board middleBoard = key::Board(midColPins, rowPins);
 
-Adafruit_MSA301 accel;
-
 const int led = 13;
 
 const int audioMemory = 20;
@@ -84,8 +81,9 @@ void setup() {
   filter.setLowpass(0, 3863, 0.707);
   filter.setLowpass(1, 3863, 0.707);
   filter.setCoefficients(3, sortaNotch);
+  dc.amplitude(0.3);
   shield.enable();
-  shield.volume(0.8);
+  shield.volume(0.9);
   dc.amplitude(1.0);
   bottomBoard.setupPins();
   middleBoard.setupPins();
@@ -94,11 +92,12 @@ void setup() {
   bellows.begin();
 
   playStartSong(bank);
-  Serial.print("Ready.\nAudio memory used: ");
-  Serial.print(AudioMemoryUsageMax());
-  Serial.print(" blocks.\nProcessor usage: ");
-  Serial.print(AudioProcessorUsageMax());
-  Serial.println("%");
+  Serial.println("Ready.\n");
+//  Serial.print("Audio memory used: ");
+//  Serial.print(AudioMemoryUsageMax());
+//  Serial.print(" blocks.\nProcessor usage: ");
+//  Serial.print(AudioProcessorUsageMax());
+//  Serial.println("%");
 
   bellows.update();
 }
@@ -138,7 +137,7 @@ void checkProcessorUsage() {
 
 key::Layout layout = lowStradella;
 
-Metro bellowsInterval(10);
+Metro bellowsInterval(5);
 //Metro plotInterval(100);
 
 void loop() {
@@ -146,9 +145,15 @@ void loop() {
   bank.notesOn(next);
 
   if (bellowsInterval.check()) {
-    float velo = bellows.update();
-    dc.amplitude(pressureCurve(velo), 10);
-    bellows.plot(Serial);
+    float speed = bellows.update();
+    float amp = pressureCurve(speed);
+    dc.amplitude(amp, 10);
+    //bellows.plot(Serial);
+    Serial.print("speed:");
+    Serial.print(speed*100.0);
+    Serial.print(",amp:");
+    Serial.print(amp*100.0);
+    Serial.println();
   }
 
   midiChannel.send(next);
@@ -161,14 +166,17 @@ void loop() {
   delay(1);
 }
 
+
+const float curveBottom = 0.15;
+const float curveTop = 0.9;
+const float curveEnd = 0.5;
+const float curveA = -(curveTop - curveBottom) / (curveEnd*curveEnd);
+const float limiterSlope = (1.0-curveTop)/(1.0-curveEnd);
+
 float pressureCurve(float x) {
-  if (x < 0.04) {
-    return 0;
+  x -= curveEnd;
+  if (x < 0) {
+    return curveA * x*x + curveTop;
   }
-  x -= 0.04;
-  x *= 6.0;
-  if (x > 1.0) {
-    return 1.0;
-  }
-  return x;
+  return curveTop + limiterSlope * x;
 }
