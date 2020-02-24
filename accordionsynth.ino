@@ -73,8 +73,6 @@ const int audioMemory = 20;
 
 const double sortaNotch[] = {1.0, 1.93, 0.948, 1.85, 0.863}; 
 
-Bellows bellows;
-
 void setup() {
   Serial.begin(9600);
   AudioMemory(audioMemory);
@@ -89,7 +87,7 @@ void setup() {
   middleBoard.setupPins();
   pinMode(led, OUTPUT);
 
-  bellows.begin();
+  bellows::begin();
 
   playStartSong(bank);
   Serial.println("Ready.\n");
@@ -99,7 +97,7 @@ void setup() {
 //  Serial.print(AudioProcessorUsageMax());
 //  Serial.println("%");
 
-  bellows.update();
+  bellows::update();
 }
 
 void playStartSong(Bank& bank) {
@@ -137,26 +135,19 @@ void checkProcessorUsage() {
 
 key::Layout layout = lowStradella;
 
-Metro bellowsInterval(5);
-//Metro plotInterval(100);
+Metro plotInterval(10);
 
 void loop() {
   Chord next = bottomBoard.poll(layout) + middleBoard.poll(layout);
   bank.notesOn(next);
+  midiChannel.send(next);
 
-  if (bellowsInterval.check()) {
-    float speed = bellows.update();
-    float amp = pressureCurve(speed);
-    dc.amplitude(amp, 10);
-    //bellows.plot(Serial);
-    Serial.print("speed:");
-    Serial.print(speed*100.0);
-    Serial.print(",amp:");
-    Serial.print(amp*100.0);
-    Serial.println();
+  if (bellows::update()) {
+    float amp = bellows::pressure();
+    dc.amplitude(amp, 5);
+    bellows::plot(Serial);
   }
 
-  midiChannel.send(next);
   while (usbMIDI.read()) {} // discard incoming
 
   checkProcessorUsage();
@@ -164,19 +155,4 @@ void loop() {
 //    bank.plotReedState(Serial, E4-1);
 //  }
   delay(1);
-}
-
-
-const float curveBottom = 0.15;
-const float curveTop = 0.9;
-const float curveEnd = 0.5;
-const float curveA = -(curveTop - curveBottom) / (curveEnd*curveEnd);
-const float limiterSlope = (1.0-curveTop)/(1.0-curveEnd);
-
-float pressureCurve(float x) {
-  x -= curveEnd;
-  if (x < 0) {
-    return curveA * x*x + curveTop;
-  }
-  return curveTop + limiterSlope * x;
 }
