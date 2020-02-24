@@ -32,18 +32,31 @@ bool update() {
     return false;
   }
   sensor.getEvent(&accel, &gyro, &temp);
-  smoothRot = (smoothRot*4 + _measureRotationSpeed()) * 0.2;
+  smoothRot = smoothRot * 0.9 + _measureRotationSpeed() * 0.1;
   return true;
 }
 
-const float curveBottom = 0.15;
+
+const float rampStart = 0.023;
+
+const float rampTop = 0.2;
+const float rampEnd = 0.04;
+const float rampSlope = rampTop/(rampEnd-rampStart);
+
 const float curveTop = 0.9;
-const float curveEnd = 0.5;
-const float curveA = -(curveTop - curveBottom) / (curveEnd*curveEnd);
+const float curveEnd = 0.4;
+const float curveRun = curveEnd - rampEnd;
+const float curveA = -(curveTop - rampTop) / (curveRun*curveRun);
 const float limiterSlope = (1.0-curveTop)/(1.0-curveEnd);
 
 float pressure() {
   float x = smoothRot / 5;
+  if (x<rampStart) {
+    return 0;
+  }
+  if (x<=rampEnd) {
+    return rampSlope * (x-rampStart);
+  }
   x -= curveEnd;
   if (x < 0) {
     return curveA * x*x + curveTop;
