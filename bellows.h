@@ -39,29 +39,26 @@ bool update() {
 
 const float rampStart = 0.023;
 
-const float rampTop = 0.2;
-const float rampEnd = 0.04;
-const float rampSlope = rampTop/(rampEnd-rampStart);
-
-const float curveTop = 0.9;
-const float curveEnd = 0.4;
-const float curveRun = curveEnd - rampEnd;
-const float curveA = -(curveTop - rampTop) / (curveRun*curveRun);
-const float limiterSlope = (1.0-curveTop)/(1.0-curveEnd);
+const float pressureCurve[21] = {
+  // First part exponential, based on: https://play.golang.org/p/L_x7ktC3tYO
+  0, 0.206, 0.266, 0.329, 0.396, 0.466, 0.540, 0.619, 0.702, 0.789, 0.882, // 0 - 0.5
+  0.94, 0.96, 0.97, 0.979, 0.985, 0.99, 0.994, 0.997, 0.999, 1.0,
+};
 
 float pressure() {
-  float x = smoothRot / 5;
-  if (x<rampStart) {
+  float x = smoothRot / 5 - rampStart;
+  if (x<=0) {
     return 0;
   }
-  if (x<=rampEnd) {
-    return rampSlope * (x-rampStart);
+  if (x>=1) {
+    return 1;
   }
-  x -= curveEnd;
-  if (x < 0) {
-    return curveA * x*x + curveTop;
-  }
-  return curveTop + limiterSlope * x;
+  int i = (int)(x*20);
+  float y0 = pressureCurve[i];
+  float y1 = pressureCurve[i+1];
+  float slope = (y1-y0)/0.05;
+  float mu = x - i / 20.0;
+  return slope * mu + y0;
 }
 
 void plot(Print& out) {
